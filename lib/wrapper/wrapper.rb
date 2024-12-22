@@ -19,7 +19,7 @@ class Discogs::Wrapper
   attr_reader :app_name
   attr_accessor :access_token, :user_token
 
-  def initialize(app_name, auth_opts={})
+  def initialize(app_name, auth_opts={}, request_options={})
     @app_name     = app_name
 
     # Allow for backwards-compatibility with v2.0.0
@@ -29,6 +29,8 @@ class Discogs::Wrapper
     else
       @access_token = auth_opts
     end
+
+    @request_options = request_options
   end
 
   # Retrieves a release by ID.
@@ -778,18 +780,18 @@ class Discogs::Wrapper
         if user_facing?
           @access_token.send(method, formatted, JSON(body), headers)
         else
-          HTTParty.send(method, uri, {headers: headers, body: JSON(body)})
+          HTTParty.send(method, uri, {headers: headers, body: JSON(body), **@request_options})
         end
       else
         if user_facing?
           @access_token.send(method, formatted, headers)
         else
-          HTTParty.send(method, uri, headers: headers)
+          HTTParty.send(method, uri, headers: headers, **@request_options)
         end
       end
     else
       # All non-authenticated endpoints are GET.
-      HTTParty.get(uri, headers: headers)
+      HTTParty.get(uri, headers: headers, **@request_options)
     end
   end
 
